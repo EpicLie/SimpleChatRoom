@@ -78,9 +78,9 @@ public class ChatHandler extends TextWebSocketHandler {
         }
         else if (whoAndWhat.isFirst==2) {
             if(updateUsers.getUserName().contains("\n"))
-                updateUsers.setUserName(updateUsers.getUserName().replace(whoAndWhat.getUserName()+'\n',"" ));
+                updateUsers.setUserName(updateUsers.getUserName().replace('\n'+whoAndWhat.getUserName(),"" ));
             else
-                updateUsers.setUserName(updateUsers.getUserName().replace(whoAndWhat.getUserName(),"" ));
+                updateUsers.setUserName(null);
             updateUsers.setIsFirst(1);
             log.info(String.format("Who has disconnected: %s", whoAndWhat.getUserName()));
             String updateUsersString = objectMapper.writeValueAsString(updateUsers);
