@@ -22,7 +22,7 @@ public class ChatHandler extends TextWebSocketHandler {
     public static class WhoAndWhat{
         String userName;
         String text;
-        Boolean isFirst = false;
+        Integer isFirst = 0;
     }
 
 //    private static WhoAndWhat whoAndWhat;
@@ -50,13 +50,13 @@ public class ChatHandler extends TextWebSocketHandler {
         ObjectMapper objectMapper = new ObjectMapper();
         WhoAndWhat whoAndWhat = objectMapper.readValue(messageJson, WhoAndWhat.class);
 
-        if(whoAndWhat.isFirst)
+        if(whoAndWhat.isFirst==1)
         {
             if(updateUsers.getUserName() == null)
                 updateUsers.setUserName(whoAndWhat.getUserName());
             else
                 updateUsers.setUserName(updateUsers.getUserName() + '\n' + whoAndWhat.getUserName());
-            updateUsers.setIsFirst(true);
+            updateUsers.setIsFirst(1);
             log.info(String.format("Who has connected: %s", whoAndWhat.getUserName()));
             String updateUsersString = objectMapper.writeValueAsString(updateUsers);
             for(WebSocketSession s:sessions){
@@ -65,7 +65,7 @@ public class ChatHandler extends TextWebSocketHandler {
                 }
             }
         }
-        else{
+        else if(whoAndWhat.isFirst==0){
             // 处理接收到的消息，广播给所有已连接的客户端
             log.info(String.format("Who said: %s", whoAndWhat.getUserName()));
             log.info(String.format("Received message: %s", whoAndWhat.getText()));
@@ -76,6 +76,21 @@ public class ChatHandler extends TextWebSocketHandler {
                 }
             }
         }
+        else if (whoAndWhat.isFirst==2) {
+            if(updateUsers.getUserName().contains("\n"))
+                updateUsers.setUserName(updateUsers.getUserName().replace(whoAndWhat.getUserName()+'\n',"" ));
+            else
+                updateUsers.setUserName(updateUsers.getUserName().replace(whoAndWhat.getUserName(),"" ));
+            updateUsers.setIsFirst(1);
+            log.info(String.format("Who has disconnected: %s", whoAndWhat.getUserName()));
+            String updateUsersString = objectMapper.writeValueAsString(updateUsers);
+            for(WebSocketSession s:sessions){
+                if(s.isOpen()){
+                    s.sendMessage(new TextMessage(updateUsersString));
+                }
+            }
+        }
+
 
 
     }

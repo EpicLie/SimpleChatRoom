@@ -22,7 +22,7 @@ class User {
     String userName;
     String text;
 //    String image;
-    Boolean isFirst;
+    Integer isFirst;
 }
 
 //@Service
@@ -72,7 +72,11 @@ public class LoginPage extends Application {
             try {
                 userMapper.getUser(userNameInput);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+//                throw new RuntimeException(e);
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("警告");
+                alert.setContentText("账号或密码错误");
+                alert.showAndWait();
             }
             if (Objects.equals(user.getText(), passwordInput)) {
                 WebSocketJavaFXClient chatRoomPage = new WebSocketJavaFXClient();

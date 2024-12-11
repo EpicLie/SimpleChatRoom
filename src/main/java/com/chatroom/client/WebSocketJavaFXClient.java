@@ -29,12 +29,6 @@ public class WebSocketJavaFXClient extends Application {
 //    public static void main(String[] args){
 //        launch(args);
 //    }
-    @Data
-    public static class UpdateGuests{
-        CopyOnWriteArrayList<String> users;
-        Boolean update;
-
-    }
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -132,7 +126,7 @@ public class WebSocketJavaFXClient extends Application {
                 @Override
                 public void onOpen(ServerHandshake serverHandshake) {
                     // 把用户名传过去备份，同时服务器进行广播，本地同步更新guestsArea
-                    LoginPage.user.setIsFirst(true);
+                    LoginPage.user.setIsFirst(1);
                     ObjectMapper objectMapper = new ObjectMapper();
                     String message = null;
                     try {
@@ -145,7 +139,7 @@ public class WebSocketJavaFXClient extends Application {
                     Platform.runLater(() -> {
                         messageArea.appendText("Connected to server\n");
                     });
-                    LoginPage.user.setIsFirst(false);
+                    LoginPage.user.setIsFirst(0);
                 }
                 @Override
                 public void onMessage(String message) {
@@ -158,7 +152,7 @@ public class WebSocketJavaFXClient extends Application {
                     } catch (JsonProcessingException e) {
                         throw new RuntimeException(e);
                     }
-                    if(whoAndWhat.getIsFirst())
+                    if(whoAndWhat.getIsFirst()==1)
                     {
                         User finalWhoAndWhat1 = whoAndWhat;
                         Platform.runLater(() -> {
@@ -174,12 +168,9 @@ public class WebSocketJavaFXClient extends Application {
                     }
 
                 }
-
                 @Override
                 public void onClose(int i, String s, boolean b) {
-                    Platform.runLater(() -> {
-                        messageArea.appendText("Connection closed\n");
-                    });
+
                 }
 
                 @Override
@@ -193,6 +184,24 @@ public class WebSocketJavaFXClient extends Application {
         }catch (Exception e){
             e.printStackTrace();
         }
+
+        primaryStage.setOnCloseRequest(windowEvent -> {
+            // 关闭时需要告知服务器用户名，从而将在线列表中的名字删除
+            LoginPage.user.setIsFirst(2);
+            ObjectMapper objectMapper = new ObjectMapper();
+            String message = null;
+            try {
+                message = objectMapper.writeValueAsString(LoginPage.user);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+            client.send(message);
+            LoginPage.user.setIsFirst(0);
+            Platform.runLater(() -> {
+                messageArea.appendText("Connection closed\n");
+            });
+            client.close();
+        });
 
     }
 }
